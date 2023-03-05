@@ -10,5 +10,6 @@ contract Faucet {
         payable(msg.sender).transfer(_amount);
     }
 
+    // fallback function
     receive() external payable {}
 }
