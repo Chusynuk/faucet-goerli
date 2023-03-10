@@ -1,15 +1,31 @@
-// SPDX-License-Identifier: SEE LICENSE IN LICENSE
-pragma solidity 0.8.18;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.17;
 
 contract Faucet {
-    function withdraw(uint _amount) public {
-        require(
-            _amount <= 100000000000000000,
-            "You can just withdraw 0.1 ETH max"
-        );
-        payable(msg.sender).transfer(_amount);
+    address payable public owner;
+
+    constructor() payable {
+        owner = payable(msg.sender);
     }
 
-    // fallback function
-    receive() external payable {}
+    function withdraw(uint _amount) public payable {
+        // users can only withdraw .1 ETH at a time, feel free to change this!
+        require(_amount <= 100000000000000000);
+        (bool sent, ) = payable(msg.sender).call{value: _amount}("");
+        require(sent, "Failed to send Ether");
+    }
+
+    function withdrawAll() public onlyOwner {
+        (bool sent, ) = owner.call{value: address(this).balance}("");
+        require(sent, "Failed to send Ether");
+    }
+
+    function destroyFaucet() public onlyOwner {
+        selfdestruct(owner);
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
 }
